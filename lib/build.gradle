@@ -1,0 +1,96 @@
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+plugins {
+    id 'java'
+    id 'se.thinkcode.cucumber-runner' version '0.0.11'
+    //id "io.qameta.allure" version "2.10.0"
+}
+
+ext {
+    junitVersion = '5.8.2'
+    cucumberVersion = '7.3.4' // this is the last version which supports the JDK 8
+    nexusUrl = "https://repo.host/nexus/repository"
+    username = System.getenv('GLOBAL_NEXUS_ACC_USR')
+    password = System.getenv('GLOBAL_NEXUS_ACC_PSW')
+}
+
+//group 'com.facebook'
+//version '1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "https://repo1.maven.org/maven2/" }
+    maven { url "https://repo.maven.apache.org/maven2" }
+    maven { url "https://packages.confluent.io/maven/" }
+    maven { url "${nexusUrl}/dto-releases/" }
+    maven {
+        credentials {
+            username "${username}"
+            password "${password}"
+        }
+        url "${nexusUrl}/module-release"
+    }
+}
+
+dependencies {
+    implementation "io.cucumber:cucumber-java:${cucumberVersion}"
+    implementation "io.cucumber:cucumber-junit:${cucumberVersion}"
+    implementation "io.cucumber:cucumber-picocontainer:${cucumberVersion}"
+    implementation "io.cucumber:cucumber-gherkin:${cucumberVersion}"
+    implementation "io.cucumber:cucumber-plugin:${cucumberVersion}"
+
+    implementation "io.cucumber:cucumber-testng:${cucumberVersion}"
+    implementation 'org.testng:testng:6.14.3!!' // !! is short hand for strict version
+
+    // implementation 'io.qameta.allure:allure-cucumber7-jvm:2.18.1'
+    //allureCommandline(files("/Users/rama.m_vlb/SIT/allure-commandline-2.18.1.zip"))
+    //allureRawResultElements(files(layout.buildDirectory.dir("custom-allure-results")))
+    // or
+    //allureRawResultElements(files("$buildDir/custom-allure-results"))
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+
+    testLogging {
+        events TestLogEvent.FAILED, TestLogEvent.PASSED, TestLogEvent.SKIPPED
+    }
+
+    systemProperties(project.gradle.startParameter.systemPropertiesArgs)
+}
+
+// task from plugin
+cucumber {
+    // threads = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    main = 'io.cucumber.core.cli.Main'
+    featurePath = 'src/test/resources/spec'
+    glue = 'com.facebook.tests'
+    extraGlues = ["com.facebook.test"]
+    //plugin = ['pretty', 'html:target/cucumber-report.html']
+    tags = ''
+    dryRun = true
+}
+
+    // custom task
+task cucumberCli() {
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = [
+                    //'--plugin', 'pretty',
+                    //'--plugin', 'html:target/cucumber-report.html',
+                    '--glue', 'com.facebook.test',
+                    '--glue', 'com.facebook.tests',
+                    '--dry-run',
+                    'src/test/resources/spec']
+        }
+    }
+}
