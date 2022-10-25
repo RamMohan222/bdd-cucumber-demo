@@ -10,12 +10,12 @@ ext {
     junitVersion = '5.8.2'
     cucumberVersion = '7.3.4' // this is the last version which supports the JDK 8
     nexusUrl = "https://repo.host/nexus/repository"
-    username = System.getenv('GLOBAL_NEXUS_ACC_USR')
+    username = System.getenv('GLOBAL_NEXUS_E')
     password = System.getenv('GLOBAL_NEXUS_ACC_PSW')
 }
 
-//group 'com.facebook'
-//version '1.0-SNAPSHOT'
+group 'bdd.cucumber'
+version '1.0-SNAPSHOT'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -39,6 +39,10 @@ repositories {
 }
 
 dependencies {
+    // these 2 dependencies are required to run tests with JUnit > gradle test
+	testImplementation 'junit:junit:4.13.1'
+	testImplementation 'org.junit.vintage:junit-vintage-engine:4.12.1'
+ 	
     implementation "io.cucumber:cucumber-java:${cucumberVersion}"
     implementation "io.cucumber:cucumber-junit:${cucumberVersion}"
     implementation "io.cucumber:cucumber-picocontainer:${cucumberVersion}"
@@ -55,6 +59,15 @@ dependencies {
     //allureRawResultElements(files("$buildDir/custom-allure-results"))
 }
 
+configurations {
+	cucumberRuntime {
+		extendsFrom testImplementation
+	}
+}
+
+
+// It runs the cucumber test through JUnit runner
+// The command to run >gradle test
 tasks.named('test') {
     useJUnitPlatform()
 
@@ -65,32 +78,48 @@ tasks.named('test') {
     systemProperties(project.gradle.startParameter.systemPropertiesArgs)
 }
 
-// task from plugin
+// task from plugin se.thinkcode.cucumber-runner
+// The command to run >gradle cucumber
 cucumber {
     // threads = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
     main = 'io.cucumber.core.cli.Main'
-    featurePath = 'src/test/resources/spec'
-    glue = 'com.facebook.tests'
-    extraGlues = ["com.facebook.test"]
-    //plugin = ['pretty', 'html:target/cucumber-report.html']
+    featurePath = 'src/test/resources/features'
+    glue = 'bdd.cucumber.demo.hooks'
+    extraGlues = ["bdd.cucumber.demo.steps"]
+    plugin = ["pretty", "html:$buildDir/cmd-cucumber-plugin-report.html"]
     tags = ''
     dryRun = true
 }
 
-    // custom task
-task cucumberCli() {
-    dependsOn assemble, testClasses
+// custom runner to run cucumber tests
+// The command to run >gradle cucumberTest
+task cucumberTest() {
+	// The group and description gives information on console while executing.
+	group 'Cucumber Tests Execution'
+    description 'Executing the cucumber tests with the custom gradle task'
+    
+   	dependsOn assemble, testClasses
     doLast {
         javaexec {
             main = "io.cucumber.core.cli.Main"
             classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
             args = [
+            		// '--threads', 2,
                     //'--plugin', 'pretty',
-                    //'--plugin', 'html:target/cucumber-report.html',
-                    '--glue', 'com.facebook.test',
-                    '--glue', 'com.facebook.tests',
+                    "--plugin", "html:$buildDir/cmd-cucumberTest-report.html", // the $buildDir will only resolve with double quotes ""
+                    '--glue', 'bdd.cucumber.demo.hooks',
+                    '--glue', 'bdd.cucumber.demo.steps',
                     '--dry-run',
-                    'src/test/resources/spec']
+                    'src/test/resources/features']
         }
     }
 }
+// while running the test cases through programatically (from main method) to make available the step definitions
+sourceSets {
+	main {
+		java {
+			srcDirs 'src/main/java', 'generated-sources/main/java', 'src/test/java'
+		}
+	}
+}
+

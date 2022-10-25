@@ -1,4 +1,4 @@
-package bdd.cucumber.demo;
+package bdd.cucumber.test.demo;
 
 public class Calculator {
 	private int init = 0;

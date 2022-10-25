@@ -1,8 +1,8 @@
-package bdd.cucumber.demo.steps;
+package bdd.cucumber.test.steps;
 
 import static org.junit.Assert.assertEquals;
 
-import bdd.cucumber.demo.Calculator;
+import bdd.cucumber.test.demo.Calculator;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;

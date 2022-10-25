@@ -27,3 +27,6 @@ hs_err_pid*
 **/gradle/*
 **/build/
 **/bin/
+**/*.html
+lib/target/
+lib/test-output/

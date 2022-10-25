@@ -1,0 +1,11 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Test-Suite" thread-count="2" parallel="tests">
+	<test name="CucumberTestsTunner">
+		<parameter name="cucumber.plugin" value="pretty,html:target/cucumber-testng-suite-report.html" />
+		<parameter name="cucumber.features" value="src/test/resources/features" />
+		<parameter name="cucumber.glue" value="bdd.cucumber.test.hooks, bdd.cucumber.test.steps" />
+		<classes>
+			<class name="bdd.cucumber.test.run.TestNgCucumberSuiteRunner" />
+		</classes>
+	</test>
+</suite>

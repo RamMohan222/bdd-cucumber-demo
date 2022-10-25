@@ -1,4 +1,4 @@
-package bdd.cucumber.demo.hooks;
+package bdd.cucumber.test.hooks;
 
 import io.cucumber.java.After;
 import io.cucumber.java.AfterAll;
