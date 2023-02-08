@@ -38,7 +38,8 @@ public class CucumberTestExecutor {
 			argOptions.add(FEATURE_LOCATION + feature);
 		}
 
-		io.cucumber.core.cli.Main.run(argOptions.toArray(String[]::new),
-				Thread.currentThread().getContextClassLoader());
+		String[] optionsAry = argOptions.toArray(new String[] {});
+
+		io.cucumber.core.cli.Main.run(optionsAry, Thread.currentThread().getContextClassLoader());
 	}
 }
